@@ -7,8 +7,6 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #1a1a1a; background: #f5f5f3; min-height: 100vh; padding: 2rem; }
-  h1 { font-size: 20px; font-weight: 600; margin-bottom: 0.25rem; }
-  .subtitle { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
   .section { background: #fff; border: 1px solid #e5e5e3; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
   .section-title { font-size: 11px; font-weight: 600; color: #888; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
   .cred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -29,10 +27,10 @@
   .badge-error { background: #fde8e8; color: #c0392b; }
   .badge-warning { background: #fff3cd; color: #856404; }
   .badge-pending { background: #f0f0f0; color: #666; }
-  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
   .btn-primary:hover { background: #333; }
   .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
-  .btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #ddd; border-radius: 7px; padding: 9px 20px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+  .btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #ddd; border-radius: 7px; padding: 9px 20px; font-size: 13px; cursor: pointer; }
   .btn-secondary:hover { background: #f5f5f5; }
   .btn-small { padding: 3px 10px; font-size: 11px; border-radius: 5px; background: #fff; border: 1px solid #ddd; cursor: pointer; color: #666; }
   .btn-small:hover { background: #f5f5f5; color: #c00; }
@@ -44,27 +42,16 @@
   select.cust-select { height: 30px; font-size: 11px; padding: 3px 6px; }
   .cust-name-raw { font-size: 11px; color: #999; margin-bottom: 3px; }
   .actions-row { display: flex; gap: 10px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
-  .col-inv { width: 7%; }
-  .col-date { width: 8%; }
-  .col-cust { width: 20%; }
-  .col-po { width: 10%; }
-  .col-rep { width: 5%; }
-  .col-desc { width: 22%; }
-  .col-qty { width: 5%; }
-  .col-amt { width: 9%; }
-  .col-status { width: 8%; }
-  .col-del { width: 5%; }
-  .token-note { font-size: 11px; color: #999; margin-top: 6px; }
+  .col-inv { width: 7%; } .col-date { width: 8%; } .col-cust { width: 20%; } .col-po { width: 10%; }
+  .col-rep { width: 5%; } .col-desc { width: 22%; } .col-qty { width: 5%; } .col-amt { width: 9%; }
+  .col-status { width: 8%; } .col-del { width: 5%; }
+  .note { font-size: 11px; color: #999; margin-top: 6px; }
   .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
   .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; color: #1a1a1a; }
   .divider { width: 1px; height: 28px; background: #ddd; }
   #previewSection { display: none; }
   .overflow-wrap { overflow-x: auto; }
-  .api-key-note { font-size: 11px; color: #999; margin-top: 6px; }
-  @media (max-width: 700px) {
-    body { padding: 1rem; }
-    .cred-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 700px) { body { padding: 1rem; } .cred-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -104,8 +91,7 @@
   <div style="margin-top:10px;">
     <button class="btn-secondary" onclick="testConnection()" id="testBtn">Test QB connection</button>
   </div>
-  <div class="token-note">QB access tokens expire after ~1 hour. Refresh at developer.intuit.com/app/developer/playground when needed.</div>
-  <div class="api-key-note">Anthropic API key is available at console.anthropic.com. It is used only for PDF extraction and is never stored.</div>
+  <div class="note">QB tokens expire after ~1 hour — refresh at developer.intuit.com/app/developer/playground. Anthropic API key from console.anthropic.com.</div>
   <div class="status-bar" id="connStatus"></div>
 </div>
 
@@ -119,7 +105,7 @@
     <input type="file" id="fileInput" accept=".pdf" multiple onchange="handleFiles(this.files)" />
     <div class="drop-icon">&#8679;</div>
     <div style="font-weight:500;margin-bottom:4px;">Drop PDF invoices here or click to browse</div>
-    <div style="font-size:11px;">Multiple files supported &mdash; each PDF can contain multiple invoices</div>
+    <div style="font-size:11px;">Multiple files supported — each PDF can contain multiple invoices</div>
   </div>
   <div class="status-bar" id="extractStatus"></div>
 </div>
@@ -157,16 +143,11 @@
 
 <script>
 const PROXY_URL = 'https://eot8ke1rhpaeo1o.m.pipedream.net';
+const ANTHROPIC_URL = 'https://api.anthropic.com';
 let invoices = [];
 let qbCustomers = [];
 
-function qbPath(path) {
-  return PROXY_URL + path;
-}
-
-function anthropicPath(path) {
-  return PROXY_URL + '/anthropic' + path;
-}
+function qbPath(path) { return PROXY_URL + path; }
 
 function getQBHeaders(env, realmId, token) {
   return {
@@ -175,14 +156,6 @@ function getQBHeaders(env, realmId, token) {
     'Content-Type': 'application/json',
     'x-qb-env': env,
     'x-qb-realm': realmId
-  };
-}
-
-function getAnthropicHeaders(apiKey) {
-  return {
-    'Content-Type': 'application/json',
-    'x-api-key': apiKey,
-    'anthropic-version': '2023-06-01'
   };
 }
 
@@ -199,7 +172,7 @@ async function testConnection() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     qbCustomers = (data.QueryResponse && data.QueryResponse.Customer ? data.QueryResponse.Customer : [])
-      .map(function(c) { return { id: c.Id, name: c.DisplayName || c.FullyQualifiedName }; });
+      .map(c => ({ id: c.Id, name: c.DisplayName || c.FullyQualifiedName }));
     setStatus('connStatus', 'Connected. ' + qbCustomers.length + ' customers loaded.', 'ok');
     refreshMatchStatus();
   } catch(e) {
@@ -217,14 +190,13 @@ async function handleFiles(files) {
   const apiKey = document.getElementById('anthropicKey').value.trim();
   if (!apiKey) { setStatus('extractStatus', 'Enter your Anthropic API key first.', 'warn'); return; }
   setStatus('extractStatus', 'Extracting data from ' + files.length + ' file(s)... this may take a moment.', 'info');
-  var newInvoices = [];
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
+  const newInvoices = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     try {
-      var base64 = await fileToBase64(file);
-      var extracted = await extractInvoiceData(base64, apiKey);
-      for (var j = 0; j < extracted.length; j++) {
-        var inv = extracted[j];
+      const base64 = await fileToBase64(file);
+      const extracted = await extractInvoiceData(base64, apiKey);
+      for (const inv of extracted) {
         inv._id = Math.random().toString(36).slice(2);
         inv._status = 'ready';
         inv._qbCustomerId = null;
@@ -244,44 +216,50 @@ async function handleFiles(files) {
 }
 
 function fileToBase64(file) {
-  return new Promise(function(res, rej) {
-    var r = new FileReader();
-    r.onload = function() { res(r.result.split(',')[1]); };
-    r.onerror = function() { rej(new Error('Read failed')); };
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Read failed'));
     r.readAsDataURL(file);
   });
 }
 
 async function extractInvoiceData(base64, apiKey) {
-  var response = await fetch(anthropicPath('/v1/messages'), {
+  const response = await fetch(ANTHROPIC_URL + '/v1/messages', {
     method: 'POST',
-    headers: getAnthropicHeaders(apiKey),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-allow-browser': 'true'
+    },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
+      max_tokens: 2000,
       messages: [{
         role: 'user',
         content: [
           { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-          { type: 'text', text: 'Extract ALL invoices from this PDF. Each page may contain one invoice. Return ONLY a JSON array, no markdown, no preamble. Each element:\n{\n  "invoiceNumber": "string",\n  "date": "YYYY-MM-DD",\n  "dueDate": "YYYY-MM-DD",\n  "customerName": "string (Bill To company name only, no address)",\n  "poNumber": "string (PO number only, strip PO: prefix)",\n  "salesRep": "string",\n  "description": "string (first line of description + \' / Pack List: \' + packing list number)",\n  "quantity": number,\n  "amount": number (total invoice amount as a plain number),\n  "terms": "string"\n}' }
+          { type: 'text', text: 'Extract ALL invoices from this PDF. Each page may contain one invoice. Return ONLY a JSON array, no markdown, no preamble. Each element:\n{\n  "invoiceNumber": "string",\n  "date": "YYYY-MM-DD",\n  "dueDate": "YYYY-MM-DD",\n  "customerName": "string (Bill To company name only, no address)",\n  "poNumber": "string (PO number only, strip PO: prefix. If no PO number use empty string)",\n  "salesRep": "string",\n  "description": "string (first line of description + \' / Pack List: \' + packing list number)",\n  "quantity": number,\n  "amount": number (total invoice amount as a plain number),\n  "terms": "string"\n}' }
         ]
       }]
     })
   });
-  var data = await response.json();
-  var text = data.content.map(function(i) { return i.text || ''; }).join('');
-  var clean = text.replace(/```json|```/g, '').trim();
-  var parsed = JSON.parse(clean);
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'Anthropic API error');
+  const text = data.content.map(i => i.text || '').join('');
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
   return Array.isArray(parsed) ? parsed : [parsed];
 }
 
 function matchCustomer(inv) {
   if (!qbCustomers.length) { inv._matchType = 'unmatched'; return; }
-  var name = (inv.customerName || '').toLowerCase().trim();
-  var exact = qbCustomers.find(function(c) { return c.name.toLowerCase().trim() === name; });
+  const name = (inv.customerName || '').toLowerCase().trim();
+  const exact = qbCustomers.find(c => c.name.toLowerCase().trim() === name);
   if (exact) { inv._qbCustomerId = exact.id; inv._matchType = 'exact'; return; }
-  var fuzzy = qbCustomers.filter(function(c) {
-    var cn = c.name.toLowerCase();
+  const fuzzy = qbCustomers.filter(c => {
+    const cn = c.name.toLowerCase();
     return cn.includes(name) || name.includes(cn) || levenshtein(cn, name) <= 4;
   }).slice(0, 8);
   inv._fuzzyOptions = fuzzy;
@@ -289,38 +267,36 @@ function matchCustomer(inv) {
 }
 
 function levenshtein(a, b) {
-  var m = a.length, n = b.length;
-  var dp = Array.from({length: m+1}, function(_, i) {
-    return Array.from({length: n+1}, function(_, j) { return i === 0 ? j : j === 0 ? i : 0; });
-  });
-  for (var i = 1; i <= m; i++)
-    for (var j = 1; j <= n; j++)
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
       dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
   return dp[m][n];
 }
 
 function refreshMatchStatus() {
-  invoices.forEach(function(inv) { matchCustomer(inv); });
+  invoices.forEach(inv => matchCustomer(inv));
   renderTable();
 }
 
 function renderTable() {
-  var tbody = document.getElementById('invoiceRows');
+  const tbody = document.getElementById('invoiceRows');
   tbody.innerHTML = '';
   document.getElementById('invoiceCount').textContent = invoices.length + ' invoice(s)';
-  invoices.forEach(function(inv) {
-    var tr = document.createElement('tr');
-    var statusBadge = '';
+  invoices.forEach(inv => {
+    const tr = document.createElement('tr');
+    let statusBadge = '';
     if (inv._status === 'error') statusBadge = '<span class="badge badge-error" title="' + escHtml(inv._error || '') + '">Error</span>';
     else if (inv._status === 'submitted') statusBadge = '<span class="badge badge-ok">Sent</span>';
     else if (inv._matchType === 'exact') statusBadge = '<span class="badge badge-ok">Matched</span>';
     else if (inv._matchType === 'fuzzy') statusBadge = '<span class="badge badge-warning">Review</span>';
     else statusBadge = '<span class="badge badge-pending">No match</span>';
 
-    var customerCell = '';
+    let customerCell = '';
     if ((inv._matchType === 'fuzzy' || inv._matchType === 'unmatched') && qbCustomers.length) {
-      var opts = (inv._matchType === 'fuzzy' ? inv._fuzzyOptions : qbCustomers)
-        .map(function(c) { return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>'; }).join('');
+      const opts = (inv._matchType === 'fuzzy' ? inv._fuzzyOptions : qbCustomers)
+        .map(c => '<option value="' + c.id + '">' + escHtml(c.name) + '</option>').join('');
       customerCell = '<div class="cust-name-raw">' + escHtml(inv.customerName) + '</div>'
         + '<select class="cust-select" onchange="selectCustomer(\'' + inv._id + '\', this.value)">'
         + '<option value="">-- select --</option>' + opts + '</select>';
@@ -348,7 +324,7 @@ function escHtml(str) {
 }
 
 function selectCustomer(id, customerId) {
-  var inv = invoices.find(function(i) { return i._id === id; });
+  const inv = invoices.find(i => i._id === id);
   if (!inv) return;
   inv._qbCustomerId = customerId || null;
   if (customerId) inv._matchType = 'exact';
@@ -356,7 +332,7 @@ function selectCustomer(id, customerId) {
 }
 
 function removeInvoice(id) {
-  invoices = invoices.filter(function(i) { return i._id !== id; });
+  invoices = invoices.filter(i => i._id !== id);
   renderTable();
   if (!invoices.length) document.getElementById('previewSection').style.display = 'none';
 }
@@ -370,19 +346,18 @@ function clearAll() {
 }
 
 async function submitAll() {
-  var token = document.getElementById('accessToken').value.trim();
-  var realmId = document.getElementById('realmId').value.trim();
-  var env = document.getElementById('qbEnv').value;
+  const token = document.getElementById('accessToken').value.trim();
+  const realmId = document.getElementById('realmId').value.trim();
+  const env = document.getElementById('qbEnv').value;
   if (!token || !realmId) { setStatus('submitStatus', 'Enter QB credentials first.', 'warn'); return; }
-  var toSubmit = invoices.filter(function(i) { return i._status !== 'submitted' && i._status !== 'error'; });
+  const toSubmit = invoices.filter(i => i._status !== 'submitted' && i._status !== 'error');
   if (!toSubmit.length) { setStatus('submitStatus', 'No invoices to submit.', 'warn'); return; }
-  var unmatched = toSubmit.filter(function(i) { return !i._qbCustomerId; });
+  const unmatched = toSubmit.filter(i => !i._qbCustomerId);
   if (unmatched.length) { setStatus('submitStatus', unmatched.length + ' invoice(s) have no customer match. Please select customers first.', 'warn'); return; }
   document.getElementById('submitBtn').disabled = true;
   setStatus('submitStatus', 'Submitting ' + toSubmit.length + ' invoice(s)...', 'info');
-  var success = 0, failed = 0;
-  for (var i = 0; i < toSubmit.length; i++) {
-    var inv = toSubmit[i];
+  let success = 0, failed = 0;
+  for (const inv of toSubmit) {
     try {
       await createQBInvoice(inv, token, realmId, env);
       inv._status = 'submitted';
@@ -399,10 +374,10 @@ async function submitAll() {
 }
 
 async function createQBInvoice(inv, token, realmId, env) {
-  var path = '/v3/company/' + realmId + '/invoice?minorversion=65';
-  var qty = Number(inv.quantity) || 1;
-  var amount = Number(inv.amount) || 0;
-  var body = {
+  const path = '/v3/company/' + realmId + '/invoice?minorversion=65';
+  const qty = Number(inv.quantity) || 1;
+  const amount = Number(inv.amount) || 0;
+  const body = {
     DocNumber: inv.invoiceNumber,
     TxnDate: inv.date,
     DueDate: inv.dueDate,
@@ -421,21 +396,21 @@ async function createQBInvoice(inv, token, realmId, env) {
   if (inv.poNumber) {
     body.CustomField = [{ DefinitionId: '1', StringValue: inv.poNumber, Type: 'StringType', Name: 'P.O. Number' }];
   }
-  var resp = await fetch(qbPath(path), {
+  const resp = await fetch(qbPath(path), {
     method: 'POST',
     headers: getQBHeaders(env, realmId, token),
     body: JSON.stringify(body)
   });
   if (!resp.ok) {
-    var err = await resp.json().catch(function() { return {}; });
-    var msg = (err && err.Fault && err.Fault.Error && err.Fault.Error[0]) ? err.Fault.Error[0].Message : ('HTTP ' + resp.status);
+    const err = await resp.json().catch(() => ({}));
+    const msg = err?.Fault?.Error?.[0]?.Message || ('HTTP ' + resp.status);
     throw new Error(msg);
   }
   return resp.json();
 }
 
 function setStatus(id, msg, type) {
-  var el = document.getElementById(id);
+  const el = document.getElementById(id);
   if (!el) return;
   el.textContent = msg;
   el.className = 'status-bar' + (type ? ' status-' + type : '');
