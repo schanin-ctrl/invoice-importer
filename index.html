@@ -60,6 +60,7 @@
   .divider { width: 1px; height: 28px; background: #ddd; }
   #previewSection { display: none; }
   .overflow-wrap { overflow-x: auto; }
+  .api-key-note { font-size: 11px; color: #999; margin-top: 6px; }
   @media (max-width: 700px) {
     body { padding: 1rem; }
     .cred-grid { grid-template-columns: 1fr; }
@@ -78,10 +79,14 @@
 </div>
 
 <div class="section">
-  <div class="section-title">QuickBooks credentials</div>
+  <div class="section-title">API credentials</div>
   <div class="cred-grid">
     <div>
-      <div class="field-label">Access token</div>
+      <div class="field-label">Anthropic API key</div>
+      <input type="password" id="anthropicKey" placeholder="sk-ant-..." />
+    </div>
+    <div>
+      <div class="field-label">QuickBooks access token</div>
       <input type="password" id="accessToken" placeholder="eyJlbmMiOiJBMTI4Q0..." />
     </div>
     <div>
@@ -95,11 +100,12 @@
         <option value="production">Production (live)</option>
       </select>
     </div>
-    <div style="display:flex;align-items:flex-end;">
-      <button class="btn-secondary" onclick="testConnection()" id="testBtn" style="width:100%;">Test connection</button>
-    </div>
   </div>
-  <div class="token-note">Access tokens expire after ~1 hour. Refresh at developer.intuit.com/app/developer/playground when needed.</div>
+  <div style="margin-top:10px;">
+    <button class="btn-secondary" onclick="testConnection()" id="testBtn">Test QB connection</button>
+  </div>
+  <div class="token-note">QB access tokens expire after ~1 hour. Refresh at developer.intuit.com/app/developer/playground when needed.</div>
+  <div class="api-key-note">Anthropic API key is available at console.anthropic.com. It is used only for PDF extraction and is never stored.</div>
   <div class="status-bar" id="connStatus"></div>
 </div>
 
@@ -158,13 +164,25 @@ function qbPath(path) {
   return PROXY_URL + path;
 }
 
-function getHeaders(env, realmId, token) {
+function anthropicPath(path) {
+  return PROXY_URL + '/anthropic' + path;
+}
+
+function getQBHeaders(env, realmId, token) {
   return {
     'Authorization': 'Bearer ' + token,
     'Accept': 'application/json',
     'Content-Type': 'application/json',
     'x-qb-env': env,
     'x-qb-realm': realmId
+  };
+}
+
+function getAnthropicHeaders(apiKey) {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01'
   };
 }
 
@@ -177,7 +195,7 @@ async function testConnection() {
   document.getElementById('testBtn').disabled = true;
   try {
     const path = '/v3/company/' + realmId + '/query?query=SELECT%20*%20FROM%20Customer%20MAXRESULTS%201000&minorversion=65';
-    const resp = await fetch(qbPath(path), { method: 'GET', headers: getHeaders(env, realmId, token) });
+    const resp = await fetch(qbPath(path), { method: 'GET', headers: getQBHeaders(env, realmId, token) });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     qbCustomers = (data.QueryResponse && data.QueryResponse.Customer ? data.QueryResponse.Customer : [])
@@ -196,13 +214,15 @@ function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone')
 
 async function handleFiles(files) {
   if (!files.length) return;
+  const apiKey = document.getElementById('anthropicKey').value.trim();
+  if (!apiKey) { setStatus('extractStatus', 'Enter your Anthropic API key first.', 'warn'); return; }
   setStatus('extractStatus', 'Extracting data from ' + files.length + ' file(s)... this may take a moment.', 'info');
   var newInvoices = [];
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
     try {
       var base64 = await fileToBase64(file);
-      var extracted = await extractInvoiceData(base64);
+      var extracted = await extractInvoiceData(base64, apiKey);
       for (var j = 0; j < extracted.length; j++) {
         var inv = extracted[j];
         inv._id = Math.random().toString(36).slice(2);
@@ -232,10 +252,10 @@ function fileToBase64(file) {
   });
 }
 
-async function extractInvoiceData(base64) {
-  var response = await fetch('https://api.anthropic.com/v1/messages', {
+async function extractInvoiceData(base64, apiKey) {
+  var response = await fetch(anthropicPath('/v1/messages'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAnthropicHeaders(apiKey),
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
@@ -291,7 +311,7 @@ function renderTable() {
   invoices.forEach(function(inv) {
     var tr = document.createElement('tr');
     var statusBadge = '';
-    if (inv._status === 'error') statusBadge = '<span class="badge badge-error" title="' + (inv._error || '') + '">Error</span>';
+    if (inv._status === 'error') statusBadge = '<span class="badge badge-error" title="' + escHtml(inv._error || '') + '">Error</span>';
     else if (inv._status === 'submitted') statusBadge = '<span class="badge badge-ok">Sent</span>';
     else if (inv._matchType === 'exact') statusBadge = '<span class="badge badge-ok">Matched</span>';
     else if (inv._matchType === 'fuzzy') statusBadge = '<span class="badge badge-warning">Review</span>';
@@ -403,7 +423,7 @@ async function createQBInvoice(inv, token, realmId, env) {
   }
   var resp = await fetch(qbPath(path), {
     method: 'POST',
-    headers: getHeaders(env, realmId, token),
+    headers: getQBHeaders(env, realmId, token),
     body: JSON.stringify(body)
   });
   if (!resp.ok) {
