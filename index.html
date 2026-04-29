@@ -19,38 +19,44 @@
   .drop-icon { font-size: 28px; margin-bottom: 8px; color: #bbb; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
   th { text-align: left; padding: 7px 8px; color: #666; font-weight: 600; border-bottom: 1px solid #eee; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
-  td { padding: 7px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; word-break: break-word; }
+  td { padding: 4px 5px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafafa; }
-  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
   .badge-ok { background: #e6f4ea; color: #1e7e34; }
   .badge-error { background: #fde8e8; color: #c0392b; }
   .badge-warning { background: #fff3cd; color: #856404; }
-  .badge-pending { background: #f0f0f0; color: #666; }
+  .badge-sent { background: #e6f4ea; color: #1e7e34; }
   .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
   .btn-primary:hover { background: #333; }
   .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
   .btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #ddd; border-radius: 7px; padding: 9px 20px; font-size: 13px; cursor: pointer; }
   .btn-secondary:hover { background: #f5f5f5; }
-  .btn-small { padding: 3px 10px; font-size: 11px; border-radius: 5px; background: #fff; border: 1px solid #ddd; cursor: pointer; color: #666; }
-  .btn-small:hover { background: #f5f5f5; color: #c00; }
+  .btn-small { padding: 3px 8px; font-size: 11px; border-radius: 5px; background: #fff; border: 1px solid #ddd; cursor: pointer; color: #999; }
+  .btn-small:hover { background: #fde8e8; color: #c00; }
   .status-bar { font-size: 12px; color: #666; min-height: 1.4rem; padding: 4px 0; }
-  .status-ok { color: #1e7e34; }
-  .status-error { color: #c0392b; }
-  .status-warn { color: #856404; }
-  .status-info { color: #1a6091; }
-  select.cust-select { height: 30px; font-size: 11px; padding: 3px 6px; }
-  .cust-name-raw { font-size: 11px; color: #999; margin-bottom: 3px; }
+  .status-ok { color: #1e7e34; } .status-error { color: #c0392b; } .status-warn { color: #856404; } .status-info { color: #1a6091; }
   .actions-row { display: flex; gap: 10px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
-  .col-inv { width: 7%; } .col-date { width: 8%; } .col-cust { width: 20%; } .col-po { width: 10%; }
-  .col-rep { width: 5%; } .col-desc { width: 22%; } .col-qty { width: 5%; } .col-amt { width: 9%; }
-  .col-status { width: 8%; } .col-del { width: 5%; }
+  .col-inv { width: 6%; } .col-date { width: 8%; } .col-cust { width: 20%; } .col-po { width: 9%; }
+  .col-rep { width: 4%; } .col-desc { width: 20%; } .col-qty { width: 4%; } .col-amt { width: 8%; }
+  .col-status { width: 9%; } .col-del { width: 4%; }
   .note { font-size: 11px; color: #999; margin-top: 6px; }
   .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
   .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; color: #1a1a1a; }
   .divider { width: 1px; height: 28px; background: #ddd; }
   #previewSection { display: none; }
   .overflow-wrap { overflow-x: auto; }
+  .cell-input { width: 100%; font-size: 11px; padding: 3px 5px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #1a1a1a; height: 24px; cursor: pointer; }
+  .cell-input:hover { border-color: #ddd; background: #fafafa; }
+  .cell-input:focus { outline: none; border-color: #888; background: #fff; cursor: text; }
+  .cell-input.fuzzy-match { background: #fffbea; border-color: #f0c040; }
+  .cell-input.fuzzy-match:focus { background: #fff; }
+  .cust-wrap { position: relative; }
+  .cust-dropdown { position: absolute; top: 100%; left: 0; min-width: 240px; background: #fff; border: 1px solid #ddd; border-radius: 6px; z-index: 999; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .cust-option { padding: 6px 10px; font-size: 12px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+  .cust-option:last-child { border-bottom: none; }
+  .cust-option:hover, .cust-option.active { background: #f0f7ff; }
+  .legend { display: flex; gap: 16px; font-size: 11px; color: #888; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: middle; }
   @media (max-width: 700px) { body { padding: 1rem; } .cred-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -113,7 +119,12 @@
 <div class="section" id="previewSection">
   <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
     <span>Invoice preview</span>
-    <span id="invoiceCount" style="font-size:12px;font-weight:400;color:#888;"></span>
+    <span id="invoiceCount" style="font-size:12px;font-weight:400;color:#888;text-transform:none;letter-spacing:0;"></span>
+  </div>
+  <div class="legend">
+    <span><span class="legend-swatch" style="background:#fffbea;border:1px solid #f0c040;"></span>Auto-corrected customer — please verify</span>
+    <span style="color:#bbb;">|</span>
+    <span>Click any cell to edit before submitting</span>
   </div>
   <div class="overflow-wrap">
     <table>
@@ -143,20 +154,89 @@
 
 <script>
 const PROXY_URL = 'https://nefm-proxy.schanin-755.workers.dev';
+
+const MASTER_CUSTOMERS = [
+  "111 Crawford Lending Club","Accelerated Media","Advanced Illumination",
+  "Advanced Instruments","Advanced Kiosks","Aircuity, Inc.","AIRMAR TECHNOLOGY CORP.",
+  "Airtho Cleanroom Products","Alert Metal Works Inc.","Americad",
+  "AMERICAN SHOE MACHINERY COMPANY","Ansen Corporation","Ashland Electric Products, Inc.",
+  "ASM NEXX, INC.","Automatic Specialties Inc.","Aved Electronics","Avery Dennison",
+  "Axcelis","Bad Dog Tools","Barados LLc","Behlman Electronics, Inc.",
+  "BIODEVICE PARTNERS","Boston Semi Equipment","BREWER'S LEDGE INC.",
+  "Bridge Appliances","CAMI RESEARCH INC.","CARLISLE COATINGS AND WATERPROOFING",
+  "C & C  Metals Engineering Inc.","Cirtronics Corporation","CLARKE ENERGY",
+  "Cogmedix","Columbia Technologies","CRYSTAL ENGINEERING","Custom Machine Consulting LLC",
+  "Dell Technologies","DEPCO ENTERPRISES LTD","Desktop Metals","DGS",
+  "Dielectric Sciences","Don-Jo Mfg, Inc","Dwyer Aluminum Mast","EFI-VUTEK INC.",
+  "EIT INCORPORATED","Excelitas Canada","Federal Electronics","Framingham Salvage Company",
+  "FTM DESIGN, LLC","Fujifilm Dimatix, Inc.","General Digital","GMP PIPING, INC.",
+  "Greene Rubber Company","GUARDIAN AGRICULTURE","Hamilton Ferris Co. POWER PRODUCTS",
+  "HAMILTON PRECISION LLC","Hawkin Dynamics","High Tech Machinist Inc.",
+  "Howard Products","HUDSON LOCK","ICA Northeast","IDEATIONS, LLC",
+  "Image Diagnostics Inc","Inkcups","Jabil Poland","JLR INDUSTRIES INC",
+  "KEA Technologies Inc.","KIDDE-FENWAL INC.","Landworks Landscaping","LAYER ZERO",
+  "LQ Mechatronics, Inc.","LUMIBIRD PHOTONICS USA","Masy Systems","MelTest",
+  "Metal Specialties Inc.","MICROSS HIREL POWER SOLUTIONS","MKS Instruments",
+  "Monotony AI Inc.","Moore Nanotechnology Systems","MWM Industry Services Inc.",
+  "Myomo Inc.","New England Fabricated Metals, Inc","NEW ENGLAND WIRE PRODUCTS",
+  "NH Technical Services","NIPPON SANSO MATHESON, INC.","OC White CO.",
+  "Olympus Surgical","OPTEON CORPORATION","OPTOGLO SOLAR SIGNS","Orion HD",
+  "Orvalis Inc.","OUTFRONT MEDIA GROUP, LLC","PACKAGING DEVICES, INC.",
+  "Peak Fabrication","PHILLIPS PRECISION, INC.","Photo Diagnostic Systems",
+  "PLASTECH MACHINING & FAB","POLHEMUS","POLYBOND NORTH AMERICA","PP Systems Inc.",
+  "Product Insight, Inc.","Qualdoc LLC","Quinsigamond Comm. College",
+  "Randolph and Baldwin Inc.","Raytheon","Real Power, Inc.","REMINGTON MEDICAL INC",
+  "RIDGEVALLEY PTY LTD","Robert J. Moran","Rockwell Automation",
+  "Sartorious Stedim North America","Savage Engineered Equipment, Inc.",
+  "SEGUE MANUFACTURING SERVICES","Selden Mast Inc.","Sencorp","Seno Medical",
+  "Setra Systems Inc.","SHINE WIRE","Shortening Shuttle","S&K Sales","Solmetex",
+  "SOLVUS GLOBAL","Sperry Product Innovation, Inc.","Spinnaker Contract Manufacturing",
+  "SQUARE ROBOT","Sterilite Corp.","SURESCAN","TEJAS NETWORKS LIMITED US",
+  "TERADIODE","Tesla Gigafactory 2","T & M Machine","T-PARTS","TRACER IMAGING LLC",
+  "Valmet Flow Control Inc.","Valmet Inc.","Vanguard Manufacturing Inc.",
+  "VAUGHN THERMAL CORPORATION","VBS INC.","V-Tron Electronics","vulcan forms",
+  "WASS-ARTHUR","Wastewater Evaporators","W. GILLIES TECHNOLOGIES, LLC.",
+  "Worcester Industrial Products","Worcester Polytechnic Institute"
+];
+
 let invoices = [];
 let qbCustomers = [];
 
-function qbPath(path) { return PROXY_URL + path; }
-function anthropicPath(path) { return PROXY_URL + '/anthropic' + path; }
+function qbPath(p) { return PROXY_URL + p; }
+function anthropicPath(p) { return PROXY_URL + '/anthropic' + p; }
 
 function getQBHeaders(env, realmId, token) {
-  return {
-    'Authorization': 'Bearer ' + token,
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'x-qb-env': env,
-    'x-qb-realm': realmId
-  };
+  return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-qb-env': env, 'x-qb-realm': realmId };
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i===0?j:j===0?i:0));
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function findBestMatch(raw) {
+  const r = raw.toLowerCase().trim();
+  const exact = MASTER_CUSTOMERS.find(c => c.toLowerCase() === r);
+  if (exact) return { name: exact, type: 'exact' };
+  const contains = MASTER_CUSTOMERS.filter(c => { const cl = c.toLowerCase(); return cl.includes(r) || r.includes(cl); });
+  if (contains.length) { contains.sort((a,b) => a.length-b.length); return { name: contains[0], type: 'fuzzy' }; }
+  const scored = MASTER_CUSTOMERS.map(c => ({ name: c, score: levenshtein(c.toLowerCase(), r) })).sort((a,b) => a.score-b.score);
+  if (scored[0].score <= 8) return { name: scored[0].name, type: 'fuzzy' };
+  return { name: raw, type: 'none' };
+}
+
+function getSuggestions(query, n=10) {
+  const q = query.toLowerCase().trim();
+  if (!q) return MASTER_CUSTOMERS.slice(0, n);
+  const scored = MASTER_CUSTOMERS.map(c => {
+    const cl = c.toLowerCase();
+    let score = levenshtein(cl, q);
+    if (cl.includes(q) || q.includes(cl)) score -= 5;
+    return { name: c, score };
+  }).sort((a,b) => a.score-b.score);
+  return scored.slice(0, n).map(s => s.name);
 }
 
 async function testConnection() {
@@ -171,10 +251,8 @@ async function testConnection() {
     const resp = await fetch(qbPath(path), { method: 'GET', headers: getQBHeaders(env, realmId, token) });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
-    qbCustomers = (data.QueryResponse && data.QueryResponse.Customer ? data.QueryResponse.Customer : [])
-      .map(c => ({ id: c.Id, name: c.DisplayName || c.FullyQualifiedName }));
+    qbCustomers = (data.QueryResponse && data.QueryResponse.Customer ? data.QueryResponse.Customer : []).map(c => ({ id: c.Id, name: c.DisplayName || c.FullyQualifiedName }));
     setStatus('connStatus', 'Connected. ' + qbCustomers.length + ' customers loaded.', 'ok');
-    refreshMatchStatus();
   } catch(e) {
     setStatus('connStatus', 'Connection failed: ' + e.message, 'error');
   }
@@ -189,7 +267,7 @@ async function handleFiles(files) {
   if (!files.length) return;
   const apiKey = document.getElementById('anthropicKey').value.trim();
   if (!apiKey) { setStatus('extractStatus', 'Enter your Anthropic API key first.', 'warn'); return; }
-  setStatus('extractStatus', 'Extracting data from ' + files.length + ' file(s)... this may take a moment.', 'info');
+  setStatus('extractStatus', 'Extracting data from ' + files.length + ' file(s)...', 'info');
   const newInvoices = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -199,13 +277,14 @@ async function handleFiles(files) {
       for (const inv of extracted) {
         inv._id = Math.random().toString(36).slice(2);
         inv._status = 'ready';
-        inv._qbCustomerId = null;
-        inv._matchType = 'none';
-        matchCustomer(inv);
+        const match = findBestMatch(inv.customerName || '');
+        inv._rawCustomer = inv.customerName;
+        inv.customerName = match.name;
+        inv._customerMatchType = match.type;
         newInvoices.push(inv);
       }
     } catch(e) {
-      newInvoices.push({ _id: Math.random().toString(36).slice(2), _status: 'error', _error: e.message, invoiceNumber: file.name, customerName: 'Parse error', date: '', dueDate: '', poNumber: '', salesRep: '', description: '', quantity: 1, amount: 0 });
+      newInvoices.push({ _id: Math.random().toString(36).slice(2), _status: 'error', _error: e.message, invoiceNumber: file.name, customerName: '', _rawCustomer: '', _customerMatchType: 'none', date: '', dueDate: '', poNumber: '', salesRep: '', description: '', quantity: 1, amount: 0 });
     }
   }
   invoices = invoices.concat(newInvoices);
@@ -216,32 +295,20 @@ async function handleFiles(files) {
 }
 
 function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Read failed'));
-    r.readAsDataURL(file);
-  });
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = () => rej(new Error('Read failed')); r.readAsDataURL(file); });
 }
 
 async function extractInvoiceData(base64, apiKey) {
   const response = await fetch(anthropicPath('/v1/messages'), {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-          { type: 'text', text: 'Extract ALL invoices from this PDF. Each page may contain one invoice. Return ONLY a JSON array, no markdown, no preamble. Each element:\n{\n  "invoiceNumber": "string",\n  "date": "YYYY-MM-DD",\n  "dueDate": "YYYY-MM-DD",\n  "customerName": "string (Bill To company name only, no address)",\n  "poNumber": "string (PO number only, strip PO: prefix. If no PO number use empty string)",\n  "salesRep": "string",\n  "description": "string (first line of description + \' / Pack List: \' + packing list number)",\n  "quantity": number,\n  "amount": number (total invoice amount as a plain number),\n  "terms": "string"\n}' }
-        ]
-      }]
+      messages: [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+        { type: 'text', text: 'Extract ALL invoices from this PDF. Each page may contain one invoice. Return ONLY a JSON array, no markdown, no preamble. Each element:\n{\n  "invoiceNumber": "string",\n  "date": "YYYY-MM-DD",\n  "dueDate": "YYYY-MM-DD",\n  "customerName": "string (Bill To company name only, no address, no department)",\n  "poNumber": "string (PO number only, strip PO: prefix. If no PO number use empty string)",\n  "salesRep": "string",\n  "description": "string (first line of description + \' / Pack List: \' + packing list number)",\n  "quantity": number,\n  "amount": number (total invoice amount as a plain number),\n  "terms": "string"\n}' }
+      ]}]
     })
   });
   const data = await response.json();
@@ -252,81 +319,97 @@ async function extractInvoiceData(base64, apiKey) {
   return Array.isArray(parsed) ? parsed : [parsed];
 }
 
-function matchCustomer(inv) {
-  if (!qbCustomers.length) { inv._matchType = 'unmatched'; return; }
-  const name = (inv.customerName || '').toLowerCase().trim();
-  const exact = qbCustomers.find(c => c.name.toLowerCase().trim() === name);
-  if (exact) { inv._qbCustomerId = exact.id; inv._matchType = 'exact'; return; }
-  const fuzzy = qbCustomers.filter(c => {
-    const cn = c.name.toLowerCase();
-    return cn.includes(name) || name.includes(cn) || levenshtein(cn, name) <= 4;
-  }).slice(0, 8);
-  inv._fuzzyOptions = fuzzy;
-  inv._matchType = fuzzy.length ? 'fuzzy' : 'unmatched';
-}
-
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
-  for (let i = 1; i <= m; i++)
-    for (let j = 1; j <= n; j++)
-      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-  return dp[m][n];
-}
-
-function refreshMatchStatus() {
-  invoices.forEach(inv => matchCustomer(inv));
-  renderTable();
-}
-
 function renderTable() {
   const tbody = document.getElementById('invoiceRows');
   tbody.innerHTML = '';
   document.getElementById('invoiceCount').textContent = invoices.length + ' invoice(s)';
   invoices.forEach(inv => {
     const tr = document.createElement('tr');
+    const isSent = inv._status === 'submitted';
+    const isError = inv._status === 'error';
     let statusBadge = '';
-    if (inv._status === 'error') statusBadge = '<span class="badge badge-error" title="' + escHtml(inv._error || '') + '">Error</span>';
-    else if (inv._status === 'submitted') statusBadge = '<span class="badge badge-ok">Sent</span>';
-    else if (inv._matchType === 'exact') statusBadge = '<span class="badge badge-ok">Matched</span>';
-    else if (inv._matchType === 'fuzzy') statusBadge = '<span class="badge badge-warning">Review</span>';
-    else statusBadge = '<span class="badge badge-pending">No match</span>';
+    if (isError) statusBadge = '<span class="badge badge-error" title="' + escHtml(inv._error||'') + '">Error</span>';
+    else if (isSent) statusBadge = '<span class="badge badge-sent">Sent ✓</span>';
+    else if (inv._customerMatchType === 'none') statusBadge = '<span class="badge badge-warning">No match</span>';
+    else if (inv._customerMatchType === 'fuzzy') statusBadge = '<span class="badge badge-warning">Check ⚠</span>';
+    else statusBadge = '<span class="badge badge-ok">Ready</span>';
 
-    let customerCell = '';
-    if ((inv._matchType === 'fuzzy' || inv._matchType === 'unmatched') && qbCustomers.length) {
-      const opts = (inv._matchType === 'fuzzy' ? inv._fuzzyOptions : qbCustomers)
-        .map(c => '<option value="' + c.id + '">' + escHtml(c.name) + '</option>').join('');
-      customerCell = '<div class="cust-name-raw">' + escHtml(inv.customerName) + '</div>'
-        + '<select class="cust-select" onchange="selectCustomer(\'' + inv._id + '\', this.value)">'
-        + '<option value="">-- select --</option>' + opts + '</select>';
-    } else {
-      customerCell = escHtml(inv.customerName || '');
-    }
+    const custClass = 'cell-input' + (inv._customerMatchType === 'fuzzy' ? ' fuzzy-match' : '');
+    const custTitle = inv._customerMatchType === 'fuzzy' ? ' title="Auto-corrected from: ' + escHtml(inv._rawCustomer||'') + '"' : '';
 
     tr.innerHTML =
-      '<td>' + escHtml(inv.invoiceNumber || '') + '</td>' +
-      '<td>' + escHtml(inv.date || '') + '</td>' +
-      '<td>' + customerCell + '</td>' +
-      '<td>' + escHtml(inv.poNumber || '') + '</td>' +
-      '<td>' + escHtml(String(inv.salesRep || '')) + '</td>' +
-      '<td style="font-size:11px;line-height:1.4;">' + escHtml(inv.description || '') + '</td>' +
-      '<td>' + escHtml(String(inv.quantity || '')) + '</td>' +
-      '<td>$' + Number(inv.amount || 0).toFixed(2) + '</td>' +
+      '<td>' + editCell(inv, 'invoiceNumber', isSent) + '</td>' +
+      '<td>' + editCell(inv, 'date', isSent) + '</td>' +
+      '<td><div class="cust-wrap">' +
+        '<input class="' + custClass + '"' + custTitle + ' value="' + escHtml(inv.customerName||'') + '" data-id="' + inv._id + '" ' +
+        (isSent ? 'readonly' : 'oninput="custInput(this,\'' + inv._id + '\')" onfocus="showDD(\'' + inv._id + '\',this.value)" onblur="hideDD(\'' + inv._id + '\')" onkeydown="custKey(event,\'' + inv._id + '\'))"') +
+        ' />' +
+        '<div class="cust-dropdown" id="dd-' + inv._id + '" style="display:none;"></div>' +
+      '</div></td>' +
+      '<td>' + editCell(inv, 'poNumber', isSent) + '</td>' +
+      '<td>' + editCell(inv, 'salesRep', isSent) + '</td>' +
+      '<td>' + editCell(inv, 'description', isSent) + '</td>' +
+      '<td>' + editCell(inv, 'quantity', isSent) + '</td>' +
+      '<td>' + editCell(inv, 'amount', isSent) + '</td>' +
       '<td>' + statusBadge + '</td>' +
-      '<td><button class="btn-small" onclick="removeInvoice(\'' + inv._id + '\')">✕</button></td>';
+      '<td>' + (isSent ? '' : '<button class="btn-small" onclick="removeInvoice(\'' + inv._id + '\')">✕</button>') + '</td>';
     tbody.appendChild(tr);
   });
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function editCell(inv, field, readonly) {
+  const val = inv[field] !== undefined ? inv[field] : '';
+  if (readonly) return '<span style="font-size:11px;">' + escHtml(String(val)) + '</span>';
+  return '<input class="cell-input" value="' + escHtml(String(val)) + '" onchange="updateField(\'' + inv._id + '\',\'' + field + '\',this.value)" />';
 }
 
-function selectCustomer(id, customerId) {
+function updateField(id, field, value) {
+  const inv = invoices.find(i => i._id === id);
+  if (inv) inv[field] = value;
+}
+
+function custInput(input, id) {
+  const inv = invoices.find(i => i._id === id);
+  if (inv) { inv.customerName = input.value; inv._customerMatchType = 'manual'; }
+  showDD(id, input.value);
+}
+
+function showDD(id, query) {
+  const dd = document.getElementById('dd-' + id);
+  if (!dd) return;
+  const suggestions = getSuggestions(query);
+  if (!suggestions.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = suggestions.map(name =>
+    '<div class="cust-option" onmousedown="pickCustomer(\'' + id + '\',\'' + name.replace(/'/g, "\\'") + '\')">' + escHtml(name) + '</div>'
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function hideDD(id) {
+  setTimeout(() => { const dd = document.getElementById('dd-' + id); if (dd) dd.style.display = 'none'; }, 200);
+}
+
+function custKey(e, id) {
+  const dd = document.getElementById('dd-' + id);
+  if (!dd || dd.style.display === 'none') return;
+  const items = dd.querySelectorAll('.cust-option');
+  const active = dd.querySelector('.cust-option.active');
+  let idx = active ? Array.from(items).indexOf(active) : -1;
+  if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx+1, items.length-1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(idx-1, 0); }
+  else if (e.key === 'Enter' && active) { e.preventDefault(); active.dispatchEvent(new MouseEvent('mousedown')); return; }
+  else if (e.key === 'Escape') { dd.style.display = 'none'; return; }
+  items.forEach(i => i.classList.remove('active'));
+  if (items[idx]) items[idx].classList.add('active');
+}
+
+function pickCustomer(id, name) {
   const inv = invoices.find(i => i._id === id);
   if (!inv) return;
-  inv._qbCustomerId = customerId || null;
-  if (customerId) inv._matchType = 'exact';
+  inv.customerName = name;
+  inv._customerMatchType = 'exact';
+  const dd = document.getElementById('dd-' + id);
+  if (dd) dd.style.display = 'none';
   renderTable();
 }
 
@@ -351,8 +434,6 @@ async function submitAll() {
   if (!token || !realmId) { setStatus('submitStatus', 'Enter QB credentials first.', 'warn'); return; }
   const toSubmit = invoices.filter(i => i._status !== 'submitted' && i._status !== 'error');
   if (!toSubmit.length) { setStatus('submitStatus', 'No invoices to submit.', 'warn'); return; }
-  const unmatched = toSubmit.filter(i => !i._qbCustomerId);
-  if (unmatched.length) { setStatus('submitStatus', unmatched.length + ' invoice(s) have no customer match. Please select customers first.', 'warn'); return; }
   document.getElementById('submitBtn').disabled = true;
   setStatus('submitStatus', 'Submitting ' + toSubmit.length + ' invoice(s)...', 'info');
   let success = 0, failed = 0;
@@ -373,47 +454,29 @@ async function submitAll() {
 }
 
 async function createQBInvoice(inv, token, realmId, env) {
+  const qbMatch = qbCustomers.find(c => c.name.toLowerCase() === (inv.customerName||'').toLowerCase());
+  if (!qbCustomers.length) throw new Error('Not connected to QB — test connection first');
+  if (!qbMatch) throw new Error('Customer not found in QB: "' + inv.customerName + '"');
   const path = '/v3/company/' + realmId + '/invoice?minorversion=65';
   const qty = Number(inv.quantity) || 1;
   const amount = Number(inv.amount) || 0;
   const body = {
-    DocNumber: inv.invoiceNumber,
-    TxnDate: inv.date,
-    DueDate: inv.dueDate,
-    CustomerRef: { value: inv._qbCustomerId },
-    Line: [{
-      Amount: amount,
-      DetailType: 'SalesItemLineDetail',
-      Description: inv.description,
-      SalesItemLineDetail: {
-        ItemRef: { name: 'Services', value: '1' },
-        Qty: qty,
-        UnitPrice: parseFloat((amount / qty).toFixed(4))
-      }
+    DocNumber: inv.invoiceNumber, TxnDate: inv.date, DueDate: inv.dueDate,
+    CustomerRef: { value: qbMatch.id },
+    Line: [{ Amount: amount, DetailType: 'SalesItemLineDetail', Description: inv.description,
+      SalesItemLineDetail: { ItemRef: { name: 'Services', value: '1' }, Qty: qty, UnitPrice: parseFloat((amount/qty).toFixed(4)) }
     }]
   };
-  if (inv.poNumber) {
-    body.CustomField = [{ DefinitionId: '1', StringValue: inv.poNumber, Type: 'StringType', Name: 'P.O. Number' }];
-  }
-  const resp = await fetch(qbPath(path), {
-    method: 'POST',
-    headers: getQBHeaders(env, realmId, token),
-    body: JSON.stringify(body)
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    const msg = err?.Fault?.Error?.[0]?.Message || ('HTTP ' + resp.status);
-    throw new Error(msg);
-  }
+  if (inv.poNumber) body.CustomField = [{ DefinitionId: '1', StringValue: inv.poNumber, Type: 'StringType', Name: 'P.O. Number' }];
+  const resp = await fetch(qbPath(path), { method: 'POST', headers: getQBHeaders(env, realmId, token), body: JSON.stringify(body) });
+  if (!resp.ok) { const err = await resp.json().catch(()=>({})); throw new Error(err?.Fault?.Error?.[0]?.Message || 'HTTP ' + resp.status); }
   return resp.json();
 }
 
-function setStatus(id, msg, type) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = msg;
-  el.className = 'status-bar' + (type ? ' status-' + type : '');
-}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setStatus(id, msg, type) { const el = document.getElementById(id); if (!el) return; el.textContent = msg; el.className = 'status-bar' + (type ? ' status-' + type : ''); }
+
+document.addEventListener('click', e => { if (!e.target.closest('.cust-wrap')) document.querySelectorAll('.cust-dropdown').forEach(d => d.style.display='none'); });
 </script>
 </body>
 </html>
