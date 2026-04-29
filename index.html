@@ -79,8 +79,8 @@
       <input type="password" id="anthropicKey" placeholder="sk-ant-..." />
     </div>
     <div>
-      <div class="field-label">QuickBooks access token</div>
-      <input type="password" id="accessToken" placeholder="eyJlbmMiOiJBMTI4Q0..." />
+      <div class="field-label">QuickBooks refresh token</div>
+      <input type="password" id="refreshToken" placeholder="Paste refresh token here..." />
     </div>
     <div>
       <div class="field-label">Realm ID (company ID)</div>
@@ -97,7 +97,7 @@
   <div style="margin-top:10px;">
     <button class="btn-secondary" onclick="testConnection()" id="testBtn">Test QB connection</button>
   </div>
-  <div class="note">QB tokens expire after ~1 hour — refresh at developer.intuit.com/app/developer/playground. Anthropic API key from console.anthropic.com.</div>
+  <div class="note">Refresh token lasts 100 days. Anthropic API key from console.anthropic.com. Get refresh token from developer.intuit.com/app/developer/playground.</div>
   <div class="status-bar" id="connStatus"></div>
 </div>
 
@@ -155,6 +155,11 @@
 <script>
 const PROXY_URL = 'https://nefm-proxy.schanin-755.workers.dev';
 
+// ── FILL THESE IN BEFORE UPLOADING TO GITHUB ─────────────────────────────
+const QB_CLIENT_ID     = 'ABYFd9gypeF9juaq9h8ShOlOO4ymd1LOTY5GfXEbp6t8VPzRYp';
+const QB_CLIENT_SECRET = 'K18zgO8V3zpdtMdeyUlRx0WFwuDtKioxUplqxnsF';
+// ─────────────────────────────────────────────────────────────────────────
+
 const MASTER_CUSTOMERS = [
   "111 Crawford Lending Club","Accelerated Media","Advanced Illumination",
   "Advanced Instruments","Advanced Kiosks","Aircuity, Inc.","AIRMAR TECHNOLOGY CORP.",
@@ -201,6 +206,8 @@ const MASTER_CUSTOMERS = [
 
 let invoices = [];
 let qbCustomers = [];
+let currentAccessToken = null;
+let tokenExpiry = null;
 
 function qbPath(p) { return PROXY_URL + p; }
 function anthropicPath(p) { return PROXY_URL + '/anthropic' + p; }
@@ -209,44 +216,58 @@ function getQBHeaders(env, realmId, token) {
   return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-qb-env': env, 'x-qb-realm': realmId };
 }
 
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i===0?j:j===0?i:0));
-  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
-  return dp[m][n];
+// ── Token refresh ─────────────────────────────────────────────────────────
+async function getAccessToken() {
+  // Return cached token if still valid (with 2 min buffer)
+  if (currentAccessToken && tokenExpiry && Date.now() < tokenExpiry - 120000) {
+    return currentAccessToken;
+  }
+  const refreshToken = document.getElementById('refreshToken').value.trim();
+  const env = document.getElementById('qbEnv').value;
+  if (!refreshToken) throw new Error('Enter your QuickBooks refresh token first');
+  if (QB_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') throw new Error('Client ID not configured — edit the HTML file');
+
+  const tokenUrl = env === 'production'
+    ? 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
+    : 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
+
+  const credentials = btoa(QB_CLIENT_ID + ':' + QB_CLIENT_SECRET);
+
+  const resp = await fetch(PROXY_URL + '/oauth-token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'x-forward-url': tokenUrl,
+      'x-forward-auth': 'Basic ' + credentials
+    },
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('Token refresh failed: ' + err);
+  }
+  const data = await resp.json();
+  if (data.error) throw new Error('Token refresh error: ' + data.error_description || data.error);
+  currentAccessToken = data.access_token;
+  tokenExpiry = Date.now() + (data.expires_in * 1000);
+  // Update refresh token if a new one was issued
+  if (data.refresh_token) {
+    document.getElementById('refreshToken').value = data.refresh_token;
+  }
+  return currentAccessToken;
 }
 
-function findBestMatch(raw) {
-  const r = raw.toLowerCase().trim();
-  const exact = MASTER_CUSTOMERS.find(c => c.toLowerCase() === r);
-  if (exact) return { name: exact, type: 'exact' };
-  const contains = MASTER_CUSTOMERS.filter(c => { const cl = c.toLowerCase(); return cl.includes(r) || r.includes(cl); });
-  if (contains.length) { contains.sort((a,b) => a.length-b.length); return { name: contains[0], type: 'fuzzy' }; }
-  const scored = MASTER_CUSTOMERS.map(c => ({ name: c, score: levenshtein(c.toLowerCase(), r) })).sort((a,b) => a.score-b.score);
-  if (scored[0].score <= 8) return { name: scored[0].name, type: 'fuzzy' };
-  return { name: raw, type: 'none' };
-}
-
-function getSuggestions(query, n=10) {
-  const q = query.toLowerCase().trim();
-  if (!q) return MASTER_CUSTOMERS.slice(0, n);
-  const scored = MASTER_CUSTOMERS.map(c => {
-    const cl = c.toLowerCase();
-    let score = levenshtein(cl, q);
-    if (cl.includes(q) || q.includes(cl)) score -= 5;
-    return { name: c, score };
-  }).sort((a,b) => a.score-b.score);
-  return scored.slice(0, n).map(s => s.name);
-}
-
+// ── QB connection ─────────────────────────────────────────────────────────
 async function testConnection() {
-  const token = document.getElementById('accessToken').value.trim();
   const realmId = document.getElementById('realmId').value.trim();
   const env = document.getElementById('qbEnv').value;
-  if (!token || !realmId) { setStatus('connStatus', 'Enter access token and realm ID first.', 'warn'); return; }
-  setStatus('connStatus', 'Connecting...', 'info');
+  if (!realmId) { setStatus('connStatus', 'Enter realm ID first.', 'warn'); return; }
+  setStatus('connStatus', 'Getting access token...', 'info');
   document.getElementById('testBtn').disabled = true;
   try {
+    const token = await getAccessToken();
+    setStatus('connStatus', 'Token obtained, connecting to QB...', 'info');
     const path = '/v3/company/' + realmId + '/query?query=SELECT%20*%20FROM%20Customer%20MAXRESULTS%201000&minorversion=65';
     const resp = await fetch(qbPath(path), { method: 'GET', headers: getQBHeaders(env, realmId, token) });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -259,6 +280,7 @@ async function testConnection() {
   document.getElementById('testBtn').disabled = false;
 }
 
+// ── File handling ─────────────────────────────────────────────────────────
 function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
 function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('drag-over'); }
 function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); handleFiles(e.dataTransfer.files); }
@@ -319,6 +341,33 @@ async function extractInvoiceData(base64, apiKey) {
   return Array.isArray(parsed) ? parsed : [parsed];
 }
 
+// ── Customer matching ─────────────────────────────────────────────────────
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i===0?j:j===0?i:0));
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function findBestMatch(raw) {
+  const r = raw.toLowerCase().trim();
+  const exact = MASTER_CUSTOMERS.find(c => c.toLowerCase() === r);
+  if (exact) return { name: exact, type: 'exact' };
+  const contains = MASTER_CUSTOMERS.filter(c => { const cl = c.toLowerCase(); return cl.includes(r) || r.includes(cl); });
+  if (contains.length) { contains.sort((a,b) => a.length-b.length); return { name: contains[0], type: 'fuzzy' }; }
+  const scored = MASTER_CUSTOMERS.map(c => ({ name: c, score: levenshtein(c.toLowerCase(), r) })).sort((a,b) => a.score-b.score);
+  if (scored[0].score <= 8) return { name: scored[0].name, type: 'fuzzy' };
+  return { name: raw, type: 'none' };
+}
+
+function getSuggestions(query, n=10) {
+  const q = query.toLowerCase().trim();
+  if (!q) return MASTER_CUSTOMERS.slice(0, n);
+  const scored = MASTER_CUSTOMERS.map(c => { const cl = c.toLowerCase(); let s = levenshtein(cl, q); if (cl.includes(q)||q.includes(cl)) s-=5; return {name:c,score:s}; }).sort((a,b)=>a.score-b.score);
+  return scored.slice(0, n).map(s => s.name);
+}
+
+// ── Table rendering ───────────────────────────────────────────────────────
 function renderTable() {
   const tbody = document.getElementById('invoiceRows');
   tbody.innerHTML = '';
@@ -342,7 +391,7 @@ function renderTable() {
       '<td>' + editCell(inv, 'date', isSent) + '</td>' +
       '<td><div class="cust-wrap">' +
         '<input class="' + custClass + '"' + custTitle + ' value="' + escHtml(inv.customerName||'') + '" data-id="' + inv._id + '" ' +
-        (isSent ? 'readonly' : 'oninput="custInput(this,\'' + inv._id + '\')" onfocus="showDD(\'' + inv._id + '\',this.value)" onblur="hideDD(\'' + inv._id + '\')" onkeydown="custKey(event,\'' + inv._id + '\'))"') +
+        (isSent ? 'readonly' : 'oninput="custInput(this,\'' + inv._id + '\')" onfocus="showDD(\'' + inv._id + '\',this.value)" onblur="hideDD(\'' + inv._id + '\')" onkeydown="custKey(event,\'' + inv._id + '\')"') +
         ' />' +
         '<div class="cust-dropdown" id="dd-' + inv._id + '" style="display:none;"></div>' +
       '</div></td>' +
@@ -427,11 +476,11 @@ function clearAll() {
   setStatus('submitStatus', '', '');
 }
 
+// ── Submit to QB ──────────────────────────────────────────────────────────
 async function submitAll() {
-  const token = document.getElementById('accessToken').value.trim();
   const realmId = document.getElementById('realmId').value.trim();
   const env = document.getElementById('qbEnv').value;
-  if (!token || !realmId) { setStatus('submitStatus', 'Enter QB credentials first.', 'warn'); return; }
+  if (!realmId) { setStatus('submitStatus', 'Enter realm ID first.', 'warn'); return; }
   const toSubmit = invoices.filter(i => i._status !== 'submitted' && i._status !== 'error');
   if (!toSubmit.length) { setStatus('submitStatus', 'No invoices to submit.', 'warn'); return; }
   document.getElementById('submitBtn').disabled = true;
@@ -439,6 +488,7 @@ async function submitAll() {
   let success = 0, failed = 0;
   for (const inv of toSubmit) {
     try {
+      const token = await getAccessToken();
       await createQBInvoice(inv, token, realmId, env);
       inv._status = 'submitted';
       success++;
