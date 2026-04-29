@@ -17,7 +17,7 @@
   .drop-zone:hover, .drop-zone.drag-over { background: #f9f9f9; border-color: #aaa; }
   .drop-zone input { display: none; }
   .drop-icon { font-size: 28px; margin-bottom: 8px; color: #bbb; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; } 
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
   th { text-align: left; padding: 7px 8px; color: #666; font-weight: 600; border-bottom: 1px solid #eee; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
   td { padding: 7px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; word-break: break-word; }
   tr:last-child td { border-bottom: none; }
@@ -25,7 +25,7 @@
   .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
   .badge-ok { background: #e6f4ea; color: #1e7e34; }
   .badge-error { background: #fde8e8; color: #c0392b; }
-  .badge-warning { background: #fff3cd; color: #856404; } 
+  .badge-warning { background: #fff3cd; color: #856404; }
   .badge-pending { background: #f0f0f0; color: #666; }
   .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
   .btn-primary:hover { background: #333; }
@@ -142,12 +142,12 @@
 </div>
 
 <script>
-const PROXY_URL = 'https://eot8ke1rhpaeo1o.m.pipedream.net';
-const ANTHROPIC_URL = 'https://api.anthropic.com';
+const PROXY_URL = 'https://nefm-proxy.schanin-755.workers.dev';
 let invoices = [];
 let qbCustomers = [];
 
 function qbPath(path) { return PROXY_URL + path; }
+function anthropicPath(path) { return PROXY_URL + '/anthropic' + path; }
 
 function getQBHeaders(env, realmId, token) {
   return {
@@ -225,13 +225,12 @@ function fileToBase64(file) {
 }
 
 async function extractInvoiceData(base64, apiKey) {
-  const response = await fetch(ANTHROPIC_URL + '/v1/messages', {
+  const response = await fetch(anthropicPath('/v1/messages'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-allow-browser': 'true'
+      'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
