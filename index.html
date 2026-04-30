@@ -48,7 +48,7 @@
   .cell-input { width: 100%; font-size: 11px; padding: 3px 5px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #1a1a1a; height: 24px; cursor: pointer; }
   .cell-input:hover { border-color: #ddd; background: #fafafa; }
   .cell-input:focus { outline: none; border-color: #888; background: #fff; cursor: text; }
-  .cell-input.fuzzy-match { background: #fffbea; border-color: #f0c040; }
+  .cell-input.fuzzy-match { background: transparent; border-color: transparent; }
   .cell-input.fuzzy-match:focus { background: #fff; }
   .cust-wrap { position: relative; }
   .cust-dropdown { position: absolute; top: 100%; left: 0; min-width: 240px; background: #fff; border: 1px solid #ddd; border-radius: 6px; z-index: 999; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
@@ -57,6 +57,7 @@
   .cust-option:hover, .cust-option.active { background: #f0f7ff; }
   .legend { display: flex; gap: 16px; font-size: 11px; color: #888; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
   .legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+  .saved-indicator { font-size: 11px; color: #1e7e34; margin-left: 6px; }
   @media (max-width: 700px) { body { padding: 1rem; } .cred-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -75,29 +76,30 @@
   <div class="section-title">API credentials</div>
   <div class="cred-grid">
     <div>
-      <div class="field-label">Anthropic API key</div>
-      <input type="password" id="anthropicKey" placeholder="sk-ant-..." />
+      <div class="field-label">Anthropic API key <span class="saved-indicator" id="anthropicSaved"></span></div>
+      <input type="password" id="anthropicKey" placeholder="sk-ant-..." onchange="saveCredentials()" />
     </div>
     <div>
-      <div class="field-label">QuickBooks refresh token</div>
-      <input type="password" id="refreshToken" placeholder="Paste refresh token here..." />
+      <div class="field-label">QuickBooks refresh token <span class="saved-indicator" id="refreshSaved"></span></div>
+      <input type="password" id="refreshToken" placeholder="Paste refresh token here (saved automatically)..." onchange="saveCredentials()" />
     </div>
     <div>
-      <div class="field-label">Realm ID (company ID)</div>
-      <input type="text" id="realmId" placeholder="1234567890" />
+      <div class="field-label">Realm ID (company ID) <span class="saved-indicator" id="realmSaved"></span></div>
+      <input type="text" id="realmId" placeholder="1234567890" onchange="saveCredentials()" />
     </div>
     <div>
       <div class="field-label">Environment</div>
-      <select id="qbEnv">
+      <select id="qbEnv" onchange="saveCredentials()">
         <option value="sandbox">Sandbox (testing)</option>
         <option value="production">Production (live)</option>
       </select>
     </div>
   </div>
-  <div style="margin-top:10px;">
+  <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
     <button class="btn-secondary" onclick="testConnection()" id="testBtn">Test QB connection</button>
+    <button class="btn-small" onclick="clearSavedCredentials()" style="font-size:11px;color:#999;">Clear saved credentials</button>
   </div>
-  <div class="note">Refresh token lasts 100 days. Anthropic API key from console.anthropic.com. Get refresh token from developer.intuit.com/app/developer/playground.</div>
+  <div class="note">Credentials are saved in your browser automatically. Refresh token updates itself — no action needed. Get a new refresh token from developer.intuit.com/app/developer/playground if connection fails.</div>
   <div class="status-bar" id="connStatus"></div>
 </div>
 
@@ -122,8 +124,6 @@
     <span id="invoiceCount" style="font-size:12px;font-weight:400;color:#888;text-transform:none;letter-spacing:0;"></span>
   </div>
   <div class="legend">
-    <span><span class="legend-swatch" style="background:#fffbea;border:1px solid #f0c040;"></span>Auto-corrected customer — please verify</span>
-    <span style="color:#bbb;">|</span>
     <span>Click any cell to edit before submitting</span>
   </div>
   <div class="overflow-wrap">
@@ -209,6 +209,56 @@ let qbCustomers = [];
 let currentAccessToken = null;
 let tokenExpiry = null;
 
+// ── localStorage persistence ──────────────────────────────────────────────
+function saveCredentials() {
+  try {
+    localStorage.setItem('nefm_anthropic_key', document.getElementById('anthropicKey').value);
+    localStorage.setItem('nefm_refresh_token', document.getElementById('refreshToken').value);
+    localStorage.setItem('nefm_realm_id', document.getElementById('realmId').value);
+    localStorage.setItem('nefm_qb_env', document.getElementById('qbEnv').value);
+    updateSavedIndicators();
+  } catch(e) { console.warn('Could not save credentials:', e); }
+}
+
+function loadCredentials() {
+  try {
+    const ak = localStorage.getItem('nefm_anthropic_key');
+    const rt = localStorage.getItem('nefm_refresh_token');
+    const rid = localStorage.getItem('nefm_realm_id');
+    const env = localStorage.getItem('nefm_qb_env');
+    if (ak) document.getElementById('anthropicKey').value = ak;
+    if (rt) document.getElementById('refreshToken').value = rt;
+    if (rid) document.getElementById('realmId').value = rid;
+    if (env) document.getElementById('qbEnv').value = env;
+    updateSavedIndicators();
+  } catch(e) { console.warn('Could not load credentials:', e); }
+}
+
+function updateSavedIndicators() {
+  document.getElementById('anthropicSaved').textContent = document.getElementById('anthropicKey').value ? '✓ saved' : '';
+  document.getElementById('refreshSaved').textContent = document.getElementById('refreshToken').value ? '✓ saved' : '';
+  document.getElementById('realmSaved').textContent = document.getElementById('realmId').value ? '✓ saved' : '';
+}
+
+function clearSavedCredentials() {
+  if (!confirm('Clear all saved credentials from this browser?')) return;
+  try {
+    localStorage.removeItem('nefm_anthropic_key');
+    localStorage.removeItem('nefm_refresh_token');
+    localStorage.removeItem('nefm_realm_id');
+    localStorage.removeItem('nefm_qb_env');
+    document.getElementById('anthropicKey').value = '';
+    document.getElementById('refreshToken').value = '';
+    document.getElementById('realmId').value = '';
+    document.getElementById('qbEnv').value = 'production';
+    currentAccessToken = null;
+    tokenExpiry = null;
+    updateSavedIndicators();
+    setStatus('connStatus', 'Saved credentials cleared.', 'info');
+  } catch(e) { console.warn('Could not clear credentials:', e); }
+}
+
+// ── Token refresh ─────────────────────────────────────────────────────────
 function qbPath(p) { return PROXY_URL + p; }
 function anthropicPath(p) { return PROXY_URL + '/anthropic' + p; }
 
@@ -216,21 +266,16 @@ function getQBHeaders(env, realmId, token) {
   return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-qb-env': env, 'x-qb-realm': realmId };
 }
 
-// ── Token refresh ─────────────────────────────────────────────────────────
 async function getAccessToken() {
-  // Return cached token if still valid (with 2 min buffer)
   if (currentAccessToken && tokenExpiry && Date.now() < tokenExpiry - 120000) {
     return currentAccessToken;
   }
   const refreshToken = document.getElementById('refreshToken').value.trim();
   const env = document.getElementById('qbEnv').value;
-  if (!refreshToken) throw new Error('Enter your QuickBooks refresh token first');
-  if (QB_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') throw new Error('Client ID not configured — edit the HTML file');
+  if (!refreshToken) throw new Error('No refresh token — paste one in the field above');
+  if (QB_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') throw new Error('Client ID not configured in the HTML file');
 
-  const tokenUrl = env === 'production'
-    ? 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
-    : 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
-
+  const tokenUrl = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
   const credentials = btoa(QB_CLIENT_ID + ':' + QB_CLIENT_SECRET);
 
   const resp = await fetch(PROXY_URL + '/oauth-token', {
@@ -248,12 +293,15 @@ async function getAccessToken() {
     throw new Error('Token refresh failed: ' + err);
   }
   const data = await resp.json();
-  if (data.error) throw new Error('Token refresh error: ' + data.error_description || data.error);
+  if (data.error) throw new Error('Token refresh error: ' + (data.error_description || data.error));
+
   currentAccessToken = data.access_token;
   tokenExpiry = Date.now() + (data.expires_in * 1000);
-  // Update refresh token if a new one was issued
+
+  // Save new refresh token automatically
   if (data.refresh_token) {
     document.getElementById('refreshToken').value = data.refresh_token;
+    saveCredentials();
   }
   return currentAccessToken;
 }
@@ -267,7 +315,7 @@ async function testConnection() {
   document.getElementById('testBtn').disabled = true;
   try {
     const token = await getAccessToken();
-    setStatus('connStatus', 'Token obtained, connecting to QB...', 'info');
+    setStatus('connStatus', 'Connecting to QuickBooks...', 'info');
     const path = '/v3/company/' + realmId + '/query?query=SELECT%20*%20FROM%20Customer%20MAXRESULTS%201000&minorversion=65';
     const resp = await fetch(qbPath(path), { method: 'GET', headers: getQBHeaders(env, realmId, token) });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -380,7 +428,7 @@ function renderTable() {
     if (isError) statusBadge = '<span class="badge badge-error" title="' + escHtml(inv._error||'') + '">Error</span>';
     else if (isSent) statusBadge = '<span class="badge badge-sent">Sent ✓</span>';
     else if (inv._customerMatchType === 'none') statusBadge = '<span class="badge badge-warning">No match</span>';
-    else if (inv._customerMatchType === 'fuzzy') statusBadge = '<span class="badge badge-warning">Check ⚠</span>';
+    else if (inv._customerMatchType === 'fuzzy') statusBadge = '<span class="badge badge-ok">Ready</span>';
     else statusBadge = '<span class="badge badge-ok">Ready</span>';
 
     const custClass = 'cell-input' + (inv._customerMatchType === 'fuzzy' ? ' fuzzy-match' : '');
@@ -527,6 +575,9 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function setStatus(id, msg, type) { const el = document.getElementById(id); if (!el) return; el.textContent = msg; el.className = 'status-bar' + (type ? ' status-' + type : ''); }
 
 document.addEventListener('click', e => { if (!e.target.closest('.cust-wrap')) document.querySelectorAll('.cust-dropdown').forEach(d => d.style.display='none'); });
+
+// Load saved credentials on page load
+window.addEventListener('load', loadCredentials);
 </script>
 </body>
 </html>
