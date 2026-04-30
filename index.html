@@ -562,7 +562,7 @@ async function createQBInvoice(inv, token, realmId, env) {
     DocNumber: inv.invoiceNumber, TxnDate: inv.date, DueDate: inv.dueDate,
     CustomerRef: { value: qbMatch.id },
     Line: [{ Amount: amount, DetailType: 'SalesItemLineDetail', Description: inv.description,
-      SalesItemLineDetail: { ItemRef: { name: 'Services', value: '1' }, Qty: qty, UnitPrice: parseFloat((amount/qty).toFixed(4)) }
+      SalesItemLineDetail: { ItemRef: { name: 'Services', value: '6' }, Qty: qty, UnitPrice: parseFloat((amount/qty).toFixed(4)) }
     }]
   };
   if (inv.poNumber) body.CustomField = [{ DefinitionId: '1', StringValue: inv.poNumber, Type: 'StringType', Name: 'P.O. Number' }];
